@@ -19,15 +19,15 @@ class SimpleCNN(nn.Module):
             nn.ReLU(inplace=True),
         )
         self.fc = nn.Sequential(
-            nn.Linear(1520768, 200),
+            nn.Linear(32 * 121 * 121, 200),
             nn.ReLU(inplace=True),
-            nn.Dropout(0.4),
+            nn.Dropout(0.3),
             nn.Linear(200, 50),
             nn.ReLU(inplace=True),
-            nn.Dropout(0.4),
+            nn.Dropout(0.3),
             nn.Linear(50, 10),
             nn.ReLU(inplace=True),
-            nn.Dropout(0.4),
+            nn.Dropout(0.3),
             nn.Linear(10, 2),
             nn.Softmax(dim=1)
         )

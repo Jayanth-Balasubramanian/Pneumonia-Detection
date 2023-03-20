@@ -1,6 +1,7 @@
 import torch
 import time
 from EarlyStopper import EarlyStopper
+
 device = torch.device('mps')
 
 
@@ -66,6 +67,7 @@ def train(model: torch.nn.Module, train_loader, val_loader, train_config):
                   .format(i, loss.item(), acc.item()))
 
         valid_loss, valid_acc = validate(model, val_loader, loss_fn)
+        print(f'validation loss was {valid_loss}, avg acc {valid_acc / float(val_size)}')
         # Find average training loss and training accuracy
         avg_train_loss = train_loss / train_size
         avg_train_acc = train_acc / float(train_size)
@@ -78,6 +80,28 @@ def train(model: torch.nn.Module, train_loader, val_loader, train_config):
               "nttValidation : Loss : {:.4f}, Accuracy: {:.4f}%, Time: {:.4f}s"
               .format(epoch, avg_train_loss, avg_train_acc * 100, avg_valid_loss,
                       avg_valid_acc * 100, epoch_end - epoch_start))
-        if early_stopper.early_stop(valid_loss):
+        if early_stopper.early_stop(avg_valid_loss):
             break
     return model, history
+
+
+def test(model: torch.nn.Module, test_loader, train_config):
+    model.eval()
+    loss_fn = train_config['LOSS_FN']
+    test_loss = 0
+    test_acc = 0
+    test_size = len(test_loader.dataset)
+    for j, (inputs, labels) in enumerate(test_loader):
+        inputs = inputs.to(device)
+        labels = labels.to(device)
+        # Forward pass - compute outputs on input data using the model
+        outputs = model(inputs)
+        # Compute loss
+        loss = loss_fn(outputs, labels)
+        # Compute the total loss for the batch and add it to valid_loss
+        test_loss, test_acc, acc = update_loss_and_accuracy(inputs, outputs, labels, loss, test_loss, test_acc)
+        print("Test Batch number: {:03d}, Validation: Loss: {:.4f}, Accuracy: {:.4f}"
+              .format(j, loss.item(), acc.item()))
+        avg_test_loss = test_loss / test_size
+        avg_test_acc = test_acc / float(test_size)
+    return avg_test_loss, avg_test_acc
