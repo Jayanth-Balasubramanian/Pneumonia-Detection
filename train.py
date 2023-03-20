@@ -1,6 +1,6 @@
 import torch
 import time
-
+from EarlyStopper import EarlyStopper
 device = torch.device('mps')
 
 
@@ -46,6 +46,7 @@ def train(model: torch.nn.Module, train_loader, val_loader, train_config):
     train_size = len(train_loader.dataset)
     val_size = len(val_loader.dataset)
 
+    early_stopper = EarlyStopper(patience=3, min_delta=0.1)
     history = []
     for epoch in range(num_epochs):
         epoch_start = time.time()
@@ -77,4 +78,6 @@ def train(model: torch.nn.Module, train_loader, val_loader, train_config):
               "nttValidation : Loss : {:.4f}, Accuracy: {:.4f}%, Time: {:.4f}s"
               .format(epoch, avg_train_loss, avg_train_acc * 100, avg_valid_loss,
                       avg_valid_acc * 100, epoch_end - epoch_start))
+        if early_stopper.early_stop(valid_loss):
+            break
     return model, history
