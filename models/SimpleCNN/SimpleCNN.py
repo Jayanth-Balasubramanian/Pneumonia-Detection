@@ -35,5 +35,6 @@ class SimpleCNN(nn.Module):
     def forward(self, x):
         x = self.conv(x)
         x = torch.flatten(x, 1)
+
         x = self.fc(x)
         return x
